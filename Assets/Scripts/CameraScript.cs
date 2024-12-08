@@ -1,48 +1,67 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class CameraScript : MonoBehaviour
 {
     private InputAction lookAction;
     private GameObject cameraPosition3;
-    private GameObject character;
+    private GameObject Character;
     private Vector3 c;
-    private Vector3 cameraAngles, cameraAngles0;
+    private Vector3 cameraAngels;
     private bool isFpv;
-    private float sensitivityH = 0.05f;
-    private float sensitivityV = -0.025f;
+    private float sensitivityH = 0.2F;
+    private float sensitivityV = -0.25F;
+
+    private float minDistance = 2.0f;
+    private float maxDistance = 10.0f;
+    private float smoothTransitionSpeed = 5.0f;
+
+    private float minVerticalAngle = 35.0f;
+    private float maxVerticalAngle = 75.0f;
 
     void Start()
     {
         lookAction = InputSystem.actions.FindAction("Look");
-        character = GameObject.Find("Character");
-        c = this.transform.position - character.transform.position;
         cameraPosition3 = GameObject.Find("CameraPosition");
-        cameraAngles0 = cameraAngles = this.transform.eulerAngles;
+        cameraAngels = this.transform.eulerAngles;
+        Character = GameObject.Find("Character");
+        c = this.transform.position - Character.transform.position;
         isFpv = true;
     }
 
     void Update()
     {
         if (Time.timeScale == 0.0f) return;
-
         if (isFpv)
         {
             float wheel = Input.mouseScrollDelta.y;
             c *= 1 - wheel / 10.0f;
 
+
+
+
             GameState.isFpv = c.magnitude < 0.25f;
+            c = Vector3.ClampMagnitude(c, maxDistance);
+            if (c.magnitude < minDistance)
+            {
+                c = c.normalized * minDistance;
+            }
 
             Vector2 lookValue = lookAction.ReadValue<Vector2>();
-            cameraAngles.x += lookValue.y * sensitivityV;
-            cameraAngles.y += lookValue.x * sensitivityH;
+            cameraAngels.x += lookValue.y * sensitivityV;
+            cameraAngels.y += lookValue.x * sensitivityH;
 
-            cameraAngles.x = Mathf.Clamp(cameraAngles.x, 35f, 75f);
+            cameraAngels.x = Mathf.Clamp(cameraAngels.x, minVerticalAngle, maxVerticalAngle);
 
-            this.transform.eulerAngles = cameraAngles;
+            this.transform.eulerAngles = cameraAngels;
 
-            this.transform.position = character.transform.position +
-                Quaternion.Euler(0, cameraAngles.y - cameraAngles0.y, 0) * c;
+            if (c.magnitude < minDistance + 1.0f)
+            {
+                c = Vector3.Lerp(c, c.normalized * minDistance, Time.deltaTime * smoothTransitionSpeed);
+            }
+
+            this.transform.position = Character.transform.position +
+                                       Quaternion.Euler(0, cameraAngels.y, 0) * c;
         }
 
         if (Input.GetKeyDown(KeyCode.Tab))

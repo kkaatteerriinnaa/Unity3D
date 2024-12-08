@@ -4,7 +4,6 @@ using UnityEngine.UI;
 public class SettingsScript : MonoBehaviour
 {
     private GameObject content;
-
     #region soundEffectsSlider
     private Slider soundEffectsSlider;
     private void initSoundEffectsSlider()
@@ -12,37 +11,32 @@ public class SettingsScript : MonoBehaviour
         soundEffectsSlider = transform
             .Find("Content/Sound/EffectsSlider")
             .GetComponent<Slider>();
+
         GameState.effectsVolume = soundEffectsSlider.value;
     }
-    public void OnSoundEffectsChanged(System.Single value)
-    {
-        GameState.effectsVolume = value;
-    }
     #endregion
 
-    #region soundAmbientSlider
-    private Slider soundAmbientSlider;
+    #region SoundAmbientSlider
+    private Slider SoundAmbientSlider;
     private void initSoundAmbientSlider()
     {
-        soundAmbientSlider = transform
+        SoundAmbientSlider = transform
             .Find("Content/Sound/AmbientSlider")
             .GetComponent<Slider>();
-        GameState.ambientVolume = soundAmbientSlider.value;
-    }
-    public void OnSoundAmbientChanged(System.Single value)
-    {
-        GameState.ambientVolume = value;
+
+        GameState.ambientVolume = SoundAmbientSlider.value;
     }
     #endregion
 
-    #region soundsMuteToggle
-    private Toggle soundsMuteToggle;
+    #region SoundsMuteToggle
+    private Toggle SoundsMuteToggle;
     private void initSoundsMuteToggle()
     {
-        soundsMuteToggle = transform
+        SoundsMuteToggle = transform
             .Find("Content/Sound/MuteToggle")
             .GetComponent<Toggle>();
-        GameState.isSoundsMuted = soundsMuteToggle.isOn;
+
+        GameState.isSoundsMuted = SoundsMuteToggle.isOn;
     }
     public void OnSoundsMuteToggle(System.Boolean value)
     {
@@ -55,7 +49,11 @@ public class SettingsScript : MonoBehaviour
         initSoundEffectsSlider();
         initSoundAmbientSlider();
         initSoundsMuteToggle();
-        content = transform.Find("Content").gameObject;
+        content = transform
+            .Find("Content")
+            .gameObject;
+        
+
         if (content.activeInHierarchy)
         {
             Time.timeScale = 0.0f;
@@ -64,11 +62,18 @@ public class SettingsScript : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyUp(KeyCode.Escape))
+        if(Input.GetKeyUp(KeyCode.Escape))
         {
-            Time.timeScale = content.activeInHierarchy ? 1.0f : 0.0f;
+            Time.timeScale= content.activeInHierarchy ? 1.0f : 0.0f;
             content.SetActive(!content.activeInHierarchy);
         }
     }
-
+    public void OnSoundsEffectsChanged(System.Single value)
+    {
+        GameState.effectsVolume = value;
+    }
+    public void OnSoundsAmbientChanged(System.Single value)
+    {
+        GameState.ambientVolume = value;
+    }
 }
