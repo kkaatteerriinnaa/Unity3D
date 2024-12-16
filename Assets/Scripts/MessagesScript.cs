@@ -7,18 +7,18 @@ public class MessagesScript : MonoBehaviour
     private float leftTime;
     private GameObject content;
     private TMPro.TextMeshProUGUI messageTMP;
-    private static MessagesScript instance;
-    private static Queue<Message> messageQueue = new Queue<Message>();
-    private string[] events = { "KeyPoint", "Gate" };
-
+    private static Queue<Message> messageQueue = new();
     void Start()
     {
-        instance = this;
-        content = transform.Find("Content").gameObject;
+        content = transform
+            .Find("Content")
+            .gameObject;
+
         messageTMP = transform
             .Find("Content/MessageText")
             .GetComponent<TMPro.TextMeshProUGUI>();
-        leftTime = 0;
+
+        leftTime = 0f;
 
         GameState.AddEventListener(OnGameEvent);
     }
@@ -39,11 +39,7 @@ public class MessagesScript : MonoBehaviour
             if (messageQueue.Count > 0)
             {
                 Message message = messageQueue.Peek();
-
-                messageTMP.text = string.IsNullOrEmpty(message.author)
-                    ? message.text
-                    : $"{message.author}: {message.text}";
-
+                messageTMP.text = message.text;
                 leftTime = message.timeout ?? this.timeout;
                 content.SetActive(true);
             }
@@ -52,49 +48,42 @@ public class MessagesScript : MonoBehaviour
 
     private void OnGameEvent(string eventName, object data)
     {
+        if (data is GameEvents.IMessage m)
         {
-            if (data is GameEvents.IMessage m)
-            {
-                ShowMessage(m.message);
-            }
-        }
-        { 
-            if (data is GameEvents.GateEvent e)
-            {
-                ShowMessage(e.message);
-            }
-        }
+            ShowMessage(m.message);            
+        }       
     }
+
     private void OnDestroy()
     {
         GameState.RemoveEventListener(OnGameEvent);
     }
 
-    public static void ShowMessage(string message, string author = null, float? timeout = null)
+    public static void ShowMessage(string message, float? timeout = null)
     {
-        foreach (var msg in messageQueue)
+        if (messageQueue.Count > 0)
         {
-            if (msg.text == message && msg.author == author)
+            Message msg = messageQueue.Peek();
+            if (msg.text == message)
             {
-                Debug.Log($"Message '{message}' from author '{author}' ignored");
+                Debug.Log($"Message '{message}' ignored");
                 return;
             }
         }
-
         messageQueue.Enqueue(new Message
         {
-            text = message,
-            author = author,
+            text = message, 
             timeout = timeout
         });
-
-        Debug.Log($"Message '{message}' from author '{author}' added to queue");
     }
 
     private class Message
     {
-        public string text { get; set; }      
-        public string author { get; set; }   
-        public float? timeout { get; set; }  
+        public string text { get; set; }
+        public float? timeout { get; set; }
     }
 }
+/* Д.З. Перевести механізм виведення повідомлень від батарейки
+ * на ігрові події (Event)
+ * ** Додати відомості про кількість доданого заряду
+ */

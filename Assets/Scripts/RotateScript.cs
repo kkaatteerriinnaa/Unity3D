@@ -7,6 +7,7 @@ public class RotateScript : MonoBehaviour
     [SerializeField] private bool y = true;
     [SerializeField] private bool z = false;
     [SerializeField] private bool local = false;
+
     void Start()
     {
         
@@ -20,9 +21,6 @@ public class RotateScript : MonoBehaviour
             y ? angle : 0,
             z ? angle : 0,
             local ? Space.Self : Space.World
-            );
-            
-        
-
+        );
     }
 }

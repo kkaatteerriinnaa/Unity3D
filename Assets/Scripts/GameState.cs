@@ -1,98 +1,96 @@
+
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEngine.UIElements;
+using System.Diagnostics;
+
 public class GameState
 {
     public static bool isDay { get; set; }
     public static bool isFpv { get; set; }
-    public static int room { get; set; } = 1;
+    public static float lookSensitivityX { get; set; } = 0.05f;
+    public static float lookSensitivityY { get; set; } = -0.025f;
+    public static float fpvRange { get; set; } = 1f;
 
+    public static int room { get; set; } = 1;  // level
     public static Dictionary<String, object> collectedItems { get; private set; } = new();
 
     #region effectsVolume
-    public static float _effectsVolume { get; set; } = 1f;
-    public static float effectsVolume
-    {
-        get => _effectsVolume;
+    private static float _effectsVolume = 1f;
+    public static float effectsVolume { 
+        get => _effectsVolume; 
         set
         {
-            if (_effectsVolume != value)
+            if(_effectsVolume != value)
             {
                 _effectsVolume = value;
                 NotifyListeners(nameof(effectsVolume));
             }
-        }
+        } 
     }
     #endregion
 
     #region ambientVolume
-    public static float _ambientVolume { get; set; } = 1f;
-    public static float ambientVolume
-    {
-        get => _ambientVolume;
+    private static float _ambientVolume = 1f;
+    public static float ambientVolume { 
+        get => _ambientVolume; 
         set
         {
-            if (_ambientVolume != value)
+            if(_ambientVolume != value)
             {
                 _ambientVolume = value;
                 NotifyListeners(nameof(ambientVolume));
             }
-        }
+        } 
     }
     #endregion
 
-    #region isSoundsMuted (Mute All)
-    public static bool _isSoundsMuted = false;
-    public static bool isSoundsMuted
-    {
-        get => _isSoundsMuted;
+    #region isSoundsMuted ( muteAll )
+    private static bool _isSoundsMuted = false;
+    public static bool isSoundsMuted { 
+        get => _isSoundsMuted; 
         set
         {
-            if (_isSoundsMuted != value)
+            if(_isSoundsMuted != value)
             {
                 _isSoundsMuted = value;
                 NotifyListeners(nameof(isSoundsMuted));
             }
-        }
+        } 
     }
     #endregion
 
     #region Change Notifier
-    private static Dictionary<String, List<Action<string>>> chaangeListeners = new();
-    public static void AddChangeListener(Action<string> listener,params String[] names)
+    private static Dictionary<String, List<Action<string>>> changeListeners = new();
+    public static void AddChangeListener(Action<string> listener, params String[] names)
     {
         foreach (String name in names)
         {
-            if (!chaangeListeners.ContainsKey(name))
+            if (!changeListeners.ContainsKey(name))
             {
-                chaangeListeners[name] = new List<Action<string>>();
+                changeListeners[name] = new List<Action<string>>();
             }
-            chaangeListeners[name].Add(listener);
+            changeListeners[name].Add(listener);
             listener(name);
         }
     }
-
     public static void RemoveChangeListener(Action<string> listener, params String[] names)
     {
         foreach (String name in names)
         {
-            if (chaangeListeners.ContainsKey(name))
+            if (changeListeners.ContainsKey(name))
             {
-                chaangeListeners[name].Remove(listener);
-
+                changeListeners[name].Remove(listener);
             }
         }
     }
     private static void NotifyListeners(String name)
     {
-        if (chaangeListeners.ContainsKey(name))
+        if (changeListeners.ContainsKey(name))
         {
-            foreach(var action in chaangeListeners[name])
+            foreach (var action in changeListeners[name])
             {
                 action(name);
             }
-
         }
     }
     #endregion
@@ -103,7 +101,7 @@ public class GameState
     {
         collectSubscribers.Add(subscriber);
     }
-    public static void RemoveCollectListener(Action<String> subscriber) 
+    public static void RemoveCollectListener(Action<String> subscriber)
     {
         collectSubscribers.Remove(subscriber);
     }
@@ -116,9 +114,11 @@ public class GameState
     #region eventSubscribers
     private const string broadcastKey = "Broadcast";
     private static Dictionary<String, List<Action<String, object>>> eventSubscribers = new();
-    public static void AddEventListener(Action<String, object> subscriber, params string[] eventNames)
+    public static void AddEventListener(
+        Action<String, object> subscriber, 
+        params string[] eventNames)
     {
-        if(eventNames == null || eventNames.Length == 0)
+        if(eventNames == null ||  eventNames.Length == 0)
         {
             eventNames = new string[1] { broadcastKey };
         }
@@ -134,6 +134,7 @@ public class GameState
             }
         }
     }
+
     public static void RemoveEventListener(Action<String, object> subscriber, params string[] eventNames)
     {
         if (eventNames == null || eventNames.Length == 0)
@@ -146,20 +147,21 @@ public class GameState
             {
                 eventSubscribers[eventName].Remove(subscriber);
             }
-            else UnityEngine.Debug.LogError("RemoveEventListener: Empty key -" + eventName);
+            else UnityEngine.Debug.LogError("RemoveEventListener: empty key - " + eventName);
         }
     }
+
     public static void TriggerEvent(String eventName, object data)
     {
         if (eventSubscribers.ContainsKey(eventName))
         {
             eventSubscribers[eventName].ForEach(s => s(eventName, data));
         }
-        if (eventName!= broadcastKey && eventSubscribers.ContainsKey(broadcastKey))
+
+        if (eventName != broadcastKey && eventSubscribers.ContainsKey(broadcastKey))
         {
             eventSubscribers[broadcastKey].ForEach(s => s(eventName, data));
         }
     }
     #endregion
-
 }
